@@ -1,0 +1,20 @@
+#+TODO: TODO FIXME IDEA CURRENT | DONE CANCELLED
+
+* Version 1
+** DONE Load game in an existing canvas by ID
+** DONE Game loop, separate state
+** DONE Load game library as an external module
+** DONE Detect game code changes, trigger reload
+** DONE Support keyboard input
+** DONE How to handle multiple game files that change?
+** DONE Add a linter
+** TODO Detect changes to initial state and do a full reload
+** TODO Publish in npm to test "real" use case
+** TODO Add code documentation, clean up
+** TODO Record / loop state
+** TODO Write documentation on how to use the library
+** TODO Handle esbuild errors gracefully (e.g. notify client?)
+** TODO Support gamepad input
+** TODO Use WebGL
+** TODO When there's an error, the client should not keep going. Also, how to recover?
+** TODO Game tools (blit image, etc)
