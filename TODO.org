@@ -1,4 +1,4 @@
-#+TODO: TODO FIXME IDEA CURRENT | DONE CANCELLED
+#+TODO: TODO FIXME IDEA CURRENT | DONE FIXED CANCELLED
 
 * Version 1
 ** DONE Load game in an existing canvas by ID
@@ -8,13 +8,34 @@
 ** DONE Support keyboard input
 ** DONE How to handle multiple game files that change?
 ** DONE Add a linter
+** DONE Publish to npm
+** DONE Add code documentation, clean up
+** FIXED Error resolving relative directories when executing ./node_modules/.bin/game-sandbox
+** FIXED The out.js bundle is created inside node_modules (should be configurable?)
+   --- But how to serve it then?
+** FIXED dynamic import issue?
+   node_modules/game-sandbox/lib/index.js: warning: This dynamic import will not be bundled because the argument
+   is not a string literal (surround with a try/catch to silence this warning)
+** DONE Decouple ~baseDir~ and ~watchDir~ (??)
+** DONE Register with the 'load' event inside ~runGame~
 ** TODO Detect changes to initial state and do a full reload
-** TODO Publish in npm to test "real" use case
-** TODO Add code documentation, clean up
-** TODO Record / loop state
+** TODO Record / loop state / go back
+** TODO Implement the ~init~ cli function
 ** TODO Write documentation on how to use the library
+   - Is it a requirement to use ESM? Since the dist bundle uses it?
+   - Document directory structure: baseDir / watchDir / outputDir
+   - Copying game-sandbox.js (in the future, serve it automagically)
+   - Document the user-facing functions and data structures (env, draw, setup, state)
+** TODO Try / document game-sandbox in Glitch
 ** TODO Handle esbuild errors gracefully (e.g. notify client?)
-** TODO Support gamepad input
-** TODO Use WebGL
 ** TODO When there's an error, the client should not keep going. Also, how to recover?
 ** TODO Game tools (blit image, etc)
+** FIXME Can we be loading stale ~out.js~ from a previously existing dist??
+** TODO The ~runGame~ moduleUrl parameter is confusing
+** FIXME Detect clashes with made up ~build~ url if the base dir has a ~build~ subdirectory
+
+
+* Version 2
+** TODO Use WebGL
+** TODO Serve the actual game-sandbox.js (rather than having to copy it manually)
+** TODO Support gamepad input

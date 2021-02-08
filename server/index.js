@@ -6,44 +6,38 @@ const chokidar = require('chokidar');
 const fs = require('fs');
 const path = require('path');
 const esbuild = require('esbuild');
-const argv = require('minimist')(process.argv.slice(2));
 
 // TODO: Fix this in some way? Do we have a single entry point? One per connection?
 let entryPoint = undefined;
-
-const USAGE = `Usage: ${process.argv[1]} --baseDir [-w] [-h]
-
- -h               Show this help and exit
- -w               Watch for changes
- --baseDir path   Serve files under path
-`;
-const ROOT_DIR = path.resolve(__dirname, '..');
-const BUILD_DIR = path.resolve(ROOT_DIR, 'build');
-const BUNDLE_FILE = path.resolve(BUILD_DIR, 'out.js');
 
 function onerror(err) {
   console.error(err.stack || err.toString());
 }
 
-function printUsageAndExit(code) {
-  console.log(USAGE);
-  process.exit(code);
-}
-
-function getClientEntryPoint(url, baseDir) {
+/**
+ * Given a client request with the form "wss://host?module=./entrypoint.js", returns the absolute
+ * path "<watchDir>/entrypoint.js"
+ */
+function getClientEntryPoint(url, watchDir) {
   let m = url.match(/.*\?module=([^&]+)$/);
   if (!m || !m[1]) throw new Error(`Invalid request ${url}`);
 
-  return path.resolve(baseDir, m[1]);
+  return path.resolve(watchDir, m[1]);
 }
 
-async function rebuildBundle(entryPoint, wss) {
+/**
+ * Rebuild the output bundle and send an update to all clients
+ *
+ */
+async function rebuildBundle(wss, entryPoint, outputDir) {
+  let outputFile = path.resolve(outputDir, 'out.js');
+
   try {
     console.time('esbuild');
     await esbuild.build({
       entryPoints: [entryPoint],
       bundle: true,
-      outfile: BUNDLE_FILE,
+      outfile: outputFile,
       sourcemap: true,
       format: 'esm',
       incremental: true,
@@ -59,18 +53,21 @@ async function rebuildBundle(entryPoint, wss) {
   }
 }
 
-function runFileWatcher(server, baseDir) {
+/**
+ * Start a WS Server, then watch for changes in watchDir and rebuild the bundle accordingly
+ *
+ */
+function runFileWatcher(server, watchDir, outputDir) {
   // Initialize the WS server
   const wss = new ws.Server({ server });
   wss.on('connection', (ws, req) => {
-    entryPoint = getClientEntryPoint(req.url, baseDir);
+    entryPoint = getClientEntryPoint(req.url, watchDir);
 
     console.log(`New connection. Clients: ${Array.from(wss.clients).length}`);
 
-    // Every time we get a new
     // FIXME: We are rebuilding every time there's a new connection. Also, we could be changing the
     // entryPoint, which doesn't make sense?
-    rebuildBundle(entryPoint, wss);
+    rebuildBundle(wss, entryPoint, outputDir);
   });
 
   wss.on('close', ws => {
@@ -81,17 +78,13 @@ function runFileWatcher(server, baseDir) {
     console.log('ERROR', e);
   });
 
-  let watcher = chokidar.watch(baseDir, {
+  let watcher = chokidar.watch(watchDir, {
     ignoreInitial: true,
-    ignored: filePath => {
-      let basename = path.basename(filePath);
-      // TODO: Temporary: do not send updates when index.js changes
-      // (Because we won't know the name of this file?)
-      return basename !== 'index.js' && basename.match(/^(\.|#)/);
-    },
+    ignored: filePath => path.basename(filePath).match(/^(\.|#)/),
   });
+
   watcher.on('all', (event, filePath) => {
-    let relative = path.relative(baseDir, filePath);
+    let relative = path.relative(watchDir, filePath);
     console.log('WATCH', event, relative);
 
     // No client has connected with a valid entrypoint yet, do not rebuild
@@ -101,28 +94,44 @@ function runFileWatcher(server, baseDir) {
     }
 
     // Otherwise, rebuild and notify
-    rebuildBundle(entryPoint, wss);
+    rebuildBundle(wss, entryPoint, outputDir);
   });
 }
 
-(function run() {
-  if (!argv.baseDir) {
-    printUsageAndExit(1);
+/**
+ * Ensures the server options are valid
+ *
+ */
+function validateOptions({ baseDir, outputDir, watchDir }) {
+  if (!baseDir) {
+    throw new Error(`Missing baseDir`);
   }
 
-  if (argv.h) {
-    printUsageAndExit(0);
+  if (!outputDir) {
+    throw new Error(`Missing outputDir`);
   }
 
-  const baseDir = path.isAbsolute(argv.baseDir)
-    ? argv.baseDir
-    : path.resolve(ROOT_DIR, argv.baseDir);
+  if (!watchDir) {
+    throw new Error(`Missing watchDir`);
+  }
+
+  if (!path.isAbsolute(baseDir)) {
+    throw new Error(`Base dir must be absolute`);
+  }
+
+  if (!path.isAbsolute(outputDir)) {
+    throw new Error(`Output dir must be absolute`);
+  }
+
+  if (!path.isAbsolute(watchDir)) {
+    throw new Error(`Watch dir must be absolute`);
+  }
 
   let stats;
   try {
     stats = fs.statSync(baseDir);
   } catch (e) {
-    console.error(`Could not find baseDir: ${e.message}`);
+    console.error(`Could not find directory '${baseDir}'\n${e.message}`);
     process.exit(1);
   }
 
@@ -131,10 +140,40 @@ function runFileWatcher(server, baseDir) {
     process.exit(1);
   }
 
-  // Create the build dir if it doesn't exist
-  fs.mkdirSync(BUILD_DIR, { recursive: true });
+  if (watchDir !== baseDir) {
+    try {
+      stats = fs.statSync(watchDir);
+    } catch (e) {
+      console.error(`Could not find directory '${watchDir}'\n${e.message}`);
+      process.exit(1);
+    }
 
-  const buildServer = serveStatic(BUILD_DIR);
+    if (!stats.isDirectory()) {
+      console.error(`Could not open ${watchDir}, or not a valid directory`);
+      process.exit(1);
+    }
+  }
+}
+
+/**
+ * Start the server. Arguments:
+ *
+ *   baseDir:   Where to serve files from
+ *   outputDir: Where to create the output bundle
+ *   watch:     (Optional) Whether to watch for file changes
+ *   watchDir:  (Optional) Directory to monitor for changes
+ *   port:      (Optional) Port to bind to
+ *
+ */
+function run(args) {
+  validateOptions(args);
+
+  let { baseDir, outputDir, watchDir } = args;
+
+  // Create the output dir if it doesn't exist
+  fs.mkdirSync(outputDir, { recursive: true });
+
+  const buildServer = serveStatic(outputDir);
   const rootServer = serveStatic(baseDir);
 
   const server = http.createServer((req, res) => {
@@ -150,13 +189,17 @@ function runFileWatcher(server, baseDir) {
   });
 
   // File watcher
-  if (argv.w) {
-    runFileWatcher(server, baseDir);
+  if (args.watch) {
+    runFileWatcher(server, watchDir, outputDir);
   }
 
-  server.listen(process.env.PORT || 8080, () => {
+  server.listen(args.port || 8080, () => {
     const address = server.address();
     console.log(`Server listening at ${address.address}:${address.port}`);
     console.log(`Serving files from ${baseDir}`);
+    console.log(`Watching changes in ${watchDir}`);
+    console.log(`Generating output in ${outputDir}`);
   });
-})();
+}
+
+module.exports = { run };

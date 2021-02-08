@@ -1,20 +1,43 @@
 {
   "name": "game-sandbox",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Game Sandbox: A game prototyping framework",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "dev": "node server/index.js",
-    "lint": "eslint client server"
+    "lint": "eslint lib server bin",
+    "build": "esbuild --bundle --sourcemap --format=esm --outfile=dist/game-sandbox.js lib/index.js",
+    "preversion": "npm run lint"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "game",
+    "library",
+    "live",
+    "hot-reload"
+  ],
+  "homepage": "https://github.com/dvvc/game-sandbox#README.org",
+  "author": {
+    "name": "David Villegas",
+    "email": "dville00@gmail.com"
+  },
+  "bin": {
+    "game-sandbox": "bin/cli.js"
+  },
+  "files": [
+    "server",
+    "lib",
+    "dist"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dvvc/game-sandbox.git"
+  },
   "dependencies": {
     "chokidar": "^3.5.1",
     "esbuild": "^0.8.39",
     "finalhandler": "^1.1.2",
-    "minimist": "^1.2.5",
+    "meow": "^9.0.0",
     "serve-static": "^1.14.1",
     "ws": "^7.4.3"
   },
