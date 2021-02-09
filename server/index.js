@@ -176,6 +176,10 @@ function run(args) {
   const buildServer = serveStatic(outputDir);
   const rootServer = serveStatic(baseDir);
 
+  // Convenience endpoint to serve the dist library
+  const libPath = path.resolve('node_modules/game-sandbox/dist');
+  const libServer = serveStatic(libPath);
+
   const server = http.createServer((req, res) => {
     const done = finalHandler(req, res, { onerror });
 
@@ -183,6 +187,8 @@ function run(args) {
       // TODO: This is kind of sloppy
       req.url = req.url.substr(6);
       return buildServer(req, res, done);
+    } else if (req.url.startsWith('/game-sandbox.js')) {
+      return libServer(req, res, done);
     }
 
     return rootServer(req, res, done);
@@ -199,6 +205,8 @@ function run(args) {
     console.log(`Serving files from ${baseDir}`);
     console.log(`Watching changes in ${watchDir}`);
     console.log(`Generating output in ${outputDir}`);
+    console.log(`Serving game-sandbox.js from ${libPath}`);
+    console.log();
   });
 }
 

@@ -18,14 +18,16 @@
    is not a string literal (surround with a try/catch to silence this warning)
 ** DONE Decouple ~baseDir~ and ~watchDir~ (??)
 ** DONE Register with the 'load' event inside ~runGame~
+** DONE Serve the actual game-sandbox.js (rather than having to copy it manually)
 ** TODO Detect changes to initial state and do a full reload
 ** TODO Record / loop state / go back
 ** TODO Implement the ~init~ cli function
 ** TODO Write documentation on how to use the library
    - Is it a requirement to use ESM? Since the dist bundle uses it?
    - Document directory structure: baseDir / watchDir / outputDir
-   - Copying game-sandbox.js (in the future, serve it automagically)
+   - Loading game-sandbox.js
    - Document the user-facing functions and data structures (env, draw, setup, state)
+   - Ejecting
 ** TODO Try / document game-sandbox in Glitch
 ** TODO Handle esbuild errors gracefully (e.g. notify client?)
 ** TODO When there's an error, the client should not keep going. Also, how to recover?
@@ -37,5 +39,4 @@
 
 * Version 2
 ** TODO Use WebGL
-** TODO Serve the actual game-sandbox.js (rather than having to copy it manually)
 ** TODO Support gamepad input
