@@ -20,20 +20,21 @@
 ** DONE Register with the 'load' event inside ~runGame~
 ** DONE Serve the actual game-sandbox.js (rather than having to copy it manually)
 ** TODO Detect changes to initial state and do a full reload
+** TODO Implement an in-game menu for built-in functions (FPS, state mgmt...)
 ** TODO Record / loop state / go back
 ** TODO Implement the ~init~ cli function
-** TODO Write documentation on how to use the library
-   - Is it a requirement to use ESM? Since the dist bundle uses it?
-   - Document directory structure: baseDir / watchDir / outputDir
-   - Loading game-sandbox.js
-   - Document the user-facing functions and data structures (env, draw, setup, state)
-   - Ejecting
 ** TODO Try / document game-sandbox in Glitch
 ** TODO Handle esbuild errors gracefully (e.g. notify client?)
 ** TODO When there's an error, the client should not keep going. Also, how to recover?
 ** TODO Game tools (blit image, etc)
 ** FIXME Can we be loading stale ~out.js~ from a previously existing dist??
 ** TODO The ~runGame~ moduleUrl parameter is confusing
+** TODO Write documentation on how to use the library
+   - Is it a requirement to use ESM? Since the dist bundle uses it?
+   - Document directory structure: baseDir / watchDir / outputDir
+   - Loading game-sandbox.js
+   - Document the user-facing functions and data structures (env, draw, setup, state)
+   - Ejecting
 ** FIXME Detect clashes with made up ~build~ url if the base dir has a ~build~ subdirectory
 
 

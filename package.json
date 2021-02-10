@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node server/index.js",
     "lint": "eslint lib server bin",
+    "prebuild": "npm run lint",
     "build": "esbuild --bundle --sourcemap --format=esm --outfile=dist/game-sandbox.js lib/index.js",
     "preversion": "npm run lint"
   },
