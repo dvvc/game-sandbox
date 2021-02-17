@@ -1,6 +1,6 @@
 {
   "name": "game-sandbox",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Game Sandbox: A game prototyping framework",
   "main": "lib/index.js",
   "scripts": {
