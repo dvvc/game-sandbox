@@ -5,44 +5,63 @@ var KEY_MAP = {
   ArrowDown: "down",
   ArrowLeft: "left",
   KeyX: "b1",
-  KeyZ: "b2",
+  KeyZ: "b2"
+};
+var ENGINE_KEY_MAP = {
   Backquote: "hud",
   Enter: "enter"
 };
 function initInput() {
   let currentInput = {};
   let currentInputP = {};
+  let engineCurrentInput = {};
+  let engineCurrentInputP = {};
   document.addEventListener("keydown", (e) => {
-    let key = KEY_MAP[e.code];
-    let keyp = key + "p";
-    if (!key)
-      return;
-    currentInput[key] = true;
-    currentInputP[keyp] = true;
+    let key;
+    if (key = KEY_MAP[e.code]) {
+      let keyp = key + "p";
+      currentInput[key] = true;
+      currentInputP[keyp] = true;
+    } else if (key = ENGINE_KEY_MAP[e.code]) {
+      let keyp = key + "p";
+      engineCurrentInput[key] = true;
+      engineCurrentInputP[keyp] = true;
+    }
   });
   document.addEventListener("keyup", (e) => {
-    let key = KEY_MAP[e.code];
-    if (!key)
-      return;
-    currentInput[key] = false;
+    let key;
+    if (key = KEY_MAP[e.code]) {
+      currentInput[key] = false;
+    } else if (key = ENGINE_KEY_MAP[e.code]) {
+      engineCurrentInput[key] = false;
+    }
   });
   return {
     currentInput,
-    currentInputP
+    currentInputP,
+    engineCurrentInput,
+    engineCurrentInputP
   };
 }
 function readInput(env) {
-  let internalInput = env.engine.input;
-  env.input = Object.assign({}, internalInput.currentInput, internalInput.currentInputP);
+  let input = env.engine.input;
+  env.input = Object.assign({}, input.currentInput, input.currentInputP);
+}
+function readInternalInput(env) {
+  let input = env.engine.input;
+  env.engine.internalInput = Object.assign({}, input.engineCurrentInput, input.engineCurrentInputP);
 }
 function clearFrameInput(internalInput) {
   Object.keys(internalInput.currentInputP).forEach((k) => {
     internalInput.currentInputP[k] = false;
   });
+  Object.keys(internalInput.engineCurrentInputP).forEach((k) => {
+    internalInput.engineCurrentInputP[k] = false;
+  });
 }
 
 // lib/hud.js
-var HUD_COMMANDS = ["Toggle FPS", "Take state snapshot", "Load state snapshot"];
+var HUD_COMMANDS = ["Start recording", "Play recording", "Stop recording"];
 var COMMAND_BG = "#555555";
 var COMMAND_FG = "#eeeeee";
 function setHudBoundingBox(hudElement, boundingBox) {
@@ -108,11 +127,63 @@ function updateHudCommandSelection(hud, input) {
     hud.selectedCommand = newCommandIndex;
   }
 }
-function updateHud(hud, input) {
-  if (input.enterp) {
+function updateHud(hud, internalInput, input) {
+  if (internalInput.enterp) {
     return hud.selectedCommand;
   }
   updateHudCommandSelection(hud, input);
+}
+
+// lib/recorder.js
+var MAX_RECORDER_SIZE = 60 * 60 * 5;
+function initRecorder() {
+  return {
+    recording: false,
+    playing: false,
+    currentInput: 0,
+    stateSnapshot: void 0,
+    inputHistory: []
+  };
+}
+function startRecording(env, updatedState) {
+  let recorder = env.engine.recorder;
+  recorder.recording = true;
+  recorder.stateSnapshot = updatedState;
+  recorder.playing = false;
+  recorder.currentInput = 0;
+  recorder.stateSnapshot = {...updatedState};
+  recorder.inputHistory = [];
+}
+function playRecording(env) {
+  let recorder = env.engine.recorder;
+  stopRecording(env);
+  recorder.playing = true;
+  recorder.currentInput = 0;
+}
+function stopRecording(env) {
+  let recorder = env.engine.recorder;
+  recorder.recording = false;
+}
+function playInputHistory(env) {
+  let recorder = env.engine.recorder;
+  if (!recorder.playing) {
+    throw new Error(`Tried to play input history, but recorder is not playing`);
+  }
+  if (recorder.inputHistory === 0) {
+    throw new Error(`Recorder input history is empty!!`);
+  }
+  let input = recorder.inputHistory[recorder.currentInput];
+  recorder.currentInput = (recorder.currentInput + 1) % recorder.inputHistory.length;
+  return input;
+}
+function recordInput(recorder, input) {
+  if (!recorder.recording) {
+    throw new Error(`Tried to record input, but recorder is not recording`);
+  }
+  recorder.inputHistory.push({...input});
+  if (recorder.inputHistory.length > MAX_RECORDER_SIZE) {
+    throw new Error(`Max record input exceeded!!`);
+  }
 }
 
 // lib/engine.js
@@ -124,6 +195,7 @@ var OPT_DEFAULTS = {
 function initEngine(canvasEl) {
   return {
     initialized: false,
+    recorder: initRecorder(),
     input: initInput(),
     hud: initHud(canvasEl.getBoundingClientRect()),
     canvasEl
@@ -153,17 +225,37 @@ function initGame(state, env) {
   let lastTime = 0;
   let hud = env.engine.hud;
   let canvasEl = env.engine.canvasEl;
+  let recorder = env.engine.recorder;
   (function gameLoop(time) {
     env.delta = (time - lastTime) / 1e3;
-    readInput(env);
-    if (env.input.hudp) {
+    if (recorder.playing) {
+      env.input = playInputHistory(env);
+      if (recorder.currentInput === 1) {
+        console.log("RESET state");
+        updatedState = {...recorder.stateSnapshot};
+      }
+    } else {
+      readInput(env);
+    }
+    readInternalInput(env);
+    if (recorder.recording && !hud.active) {
+      recordInput(recorder, env.input);
+    }
+    if (env.engine.internalInput.hudp) {
       toggleHud(hud, canvasEl.getBoundingClientRect());
     }
     if (hud.active) {
-      let selectedCommand = updateHud(hud, env.input);
+      let selectedCommand = updateHud(hud, env.engine.internalInput, env.input);
       if (selectedCommand !== void 0) {
         toggleHud(hud, canvasEl.getBoundingClientRect());
-        console.log("COMMMAND!", selectedCommand);
+        if (selectedCommand === 0) {
+          startRecording(env, updatedState);
+        } else if (selectedCommand === 1) {
+          playRecording(env);
+          updatedState = {...recorder.stateSnapshot};
+        } else if (selectedCommand === 2) {
+          stopRecording(env);
+        }
       }
     } else {
       updatedState = env.engine.draw(updatedState, env);
