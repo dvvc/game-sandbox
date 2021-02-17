@@ -33,7 +33,7 @@
    - Loading game-sandbox.js
    - Document the user-facing functions and data structures (env, draw, setup, state)
    - Ejecting
-** FIXME Recalculate canvas BB every time HUD is toggled on
+** DONE Recalculate canvas BB every time HUD is toggled on
    - Currently, resizing the screen after starting the engine causes the HUD to be misplaced
 ** TODO Record / loop state / go back
 ** TODO Detect changes to initial state and do a full reload
@@ -44,6 +44,7 @@
 ** FIXME Can we be loading stale ~out.js~ from a previously existing dist??
 ** TODO The ~runGame~ moduleUrl parameter is confusing
 ** FIXME Detect clashes with made up ~build~ url if the base dir has a ~build~ subdirectory
+** FIXME Reposition HUD when window changes size
 
 
 

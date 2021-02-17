@@ -45,13 +45,16 @@ function clearFrameInput(internalInput) {
 var HUD_COMMANDS = ["Toggle FPS", "Take state snapshot", "Load state snapshot"];
 var COMMAND_BG = "#555555";
 var COMMAND_FG = "#eeeeee";
-function buildHudElement(boundingBox) {
-  let hudElement = document.createElement("div");
-  hudElement.style.position = "absolute";
+function setHudBoundingBox(hudElement, boundingBox) {
   hudElement.style.top = boundingBox.top + "px";
   hudElement.style.left = boundingBox.left + "px";
   hudElement.style.width = boundingBox.width + "px";
   hudElement.style.height = boundingBox.height + "px";
+}
+function buildHudElement(boundingBox) {
+  let hudElement = document.createElement("div");
+  hudElement.style.position = "absolute";
+  setHudBoundingBox(hudElement, boundingBox);
   hudElement.style.backgroundColor = COMMAND_BG;
   hudElement.style.opacity = 0;
   hudElement.style.transition = "opacity 0.3s ease";
@@ -65,6 +68,7 @@ function buildHudElement(boundingBox) {
     let commandItem = document.createElement("li");
     commandItem.innerHTML = cmd;
     commandItem.style.lineHeight = 1.6;
+    commandItem.style.padding = "2px 10px";
     hudCommandList.appendChild(commandItem);
   });
   hudCommandList.children.item(0).style.backgroundColor = COMMAND_FG;
@@ -72,8 +76,8 @@ function buildHudElement(boundingBox) {
   hudElement.appendChild(hudCommandList);
   return hudElement;
 }
-function initHud(boundingBox) {
-  let hudElement = buildHudElement(boundingBox);
+function initHud(canvasBoundingBox) {
+  let hudElement = buildHudElement(canvasBoundingBox);
   document.body.appendChild(hudElement);
   return {
     active: false,
@@ -81,8 +85,11 @@ function initHud(boundingBox) {
     element: hudElement
   };
 }
-function toggleHud(hud) {
+function toggleHud(hud, canvasBoundingBox) {
   hud.active = !hud.active;
+  if (hud.active) {
+    setHudBoundingBox(hud.element, canvasBoundingBox);
+  }
   hud.element.style.opacity = Number(hud.active);
 }
 function updateHudCommandSelection(hud, input) {
@@ -114,11 +121,12 @@ var OPT_DEFAULTS = {
   height: 600,
   canvasId: "canvas"
 };
-function initEngine(canvasBoundingBox) {
+function initEngine(canvasEl) {
   return {
     initialized: false,
     input: initInput(),
-    hud: initHud(canvasBoundingBox)
+    hud: initHud(canvasEl.getBoundingClientRect()),
+    canvasEl
   };
 }
 function initEnv(opts) {
@@ -137,22 +145,24 @@ function initEnv(opts) {
     height,
     input: {},
     delta: 0,
-    engine: initEngine(canvasEl.getBoundingClientRect())
+    engine: initEngine(canvasEl)
   };
 }
 function initGame(state, env) {
   let updatedState = state;
   let lastTime = 0;
+  let hud = env.engine.hud;
+  let canvasEl = env.engine.canvasEl;
   (function gameLoop(time) {
     env.delta = (time - lastTime) / 1e3;
     readInput(env);
     if (env.input.hudp) {
-      toggleHud(env.engine.hud);
+      toggleHud(hud, canvasEl.getBoundingClientRect());
     }
-    if (env.engine.hud.active) {
-      let selectedCommand = updateHud(env.engine.hud, env.input);
+    if (hud.active) {
+      let selectedCommand = updateHud(hud, env.input);
       if (selectedCommand !== void 0) {
-        toggleHud(env.engine.hud);
+        toggleHud(hud, canvasEl.getBoundingClientRect());
         console.log("COMMMAND!", selectedCommand);
       }
     } else {
