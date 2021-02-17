@@ -82,7 +82,8 @@ function initGame(state, engine, env) {
   })(0);
 }
 function startGameClient(moduleUrl, engine, env) {
-  let ws = new WebSocket(`ws://${location.host}?module=${moduleUrl}`);
+  let protocol = location.protocol === "https" ? "wss" : "ws";
+  let ws = new WebSocket(`${protocol}://${location.host}?module=${moduleUrl}`);
   ws.addEventListener("message", async (event) => {
     let [action, file] = event.data.split(":");
     if (action === "change" || action === "rebuild") {

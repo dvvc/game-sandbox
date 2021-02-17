@@ -19,6 +19,8 @@
 ** DONE Decouple ~baseDir~ and ~watchDir~ (??)
 ** DONE Register with the 'load' event inside ~runGame~
 ** DONE Serve the actual game-sandbox.js (rather than having to copy it manually)
+** DONE Support for secure web sockets
+** TODO Rewrite the README in markdown because NPMJS.com doesn't like org mode
 ** TODO Detect changes to initial state and do a full reload
 ** TODO Implement an in-game menu for built-in functions (FPS, state mgmt...)
 ** TODO Record / loop state / go back
@@ -38,6 +40,8 @@
 ** FIXME Detect clashes with made up ~build~ url if the base dir has a ~build~ subdirectory
 
 
+
 * Version 2
 ** TODO Use WebGL
 ** TODO Support gamepad input
+** TODO Add parameter to exclude files from watcher
