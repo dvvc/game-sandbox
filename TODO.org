@@ -21,22 +21,28 @@
 ** DONE Serve the actual game-sandbox.js (rather than having to copy it manually)
 ** DONE Support for secure web sockets
 ** DONE Rewrite the README in markdown because NPMJS.com doesn't like org mode
-** TODO Detect changes to initial state and do a full reload
-** TODO Implement an in-game menu for built-in functions (FPS, state mgmt...)
-** TODO Record / loop state / go back
-** TODO Implement the ~init~ cli function
-** TODO Try / document game-sandbox in Glitch
-** TODO Handle esbuild errors gracefully (e.g. notify client?)
-** TODO When there's an error, the client should not keep going. Also, how to recover?
-** TODO Game tools (blit image, etc)
-** FIXME Can we be loading stale ~out.js~ from a previously existing dist??
-** TODO The ~runGame~ moduleUrl parameter is confusing
-** TODO Write documentation on how to use the library
+** DONE Implement an in-game menu for built-in functions (FPS, state mgmt...)
+** DONE Try / document game-sandbox in Glitch
+   - Conclusion: Glitch is, surprisingly, not a good fit for this library. The main problem found is
+     it too eager when detecting changes to the source. This results in the game reloading too
+     often, and when it's in an error state (e.g., when in the middle of typing a command)
+   - A better alternative would be a web editor (plus server) that does not autosave
+** DONE Write documentation on how to use the library
    - Is it a requirement to use ESM? Since the dist bundle uses it?
    - Document directory structure: baseDir / watchDir / outputDir
    - Loading game-sandbox.js
    - Document the user-facing functions and data structures (env, draw, setup, state)
    - Ejecting
+** FIXME Recalculate canvas BB every time HUD is toggled on
+   - Currently, resizing the screen after starting the engine causes the HUD to be misplaced
+** TODO Record / loop state / go back
+** TODO Detect changes to initial state and do a full reload
+** TODO Implement the ~init~ cli function
+** TODO Handle esbuild errors gracefully (e.g. notify client?)
+** TODO When there's an error, the client should not keep going. Also, how to recover?
+** TODO Game tools (blit image, etc)
+** FIXME Can we be loading stale ~out.js~ from a previously existing dist??
+** TODO The ~runGame~ moduleUrl parameter is confusing
 ** FIXME Detect clashes with made up ~build~ url if the base dir has a ~build~ subdirectory
 
 
