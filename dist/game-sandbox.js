@@ -231,7 +231,6 @@ function initGame(state, env) {
     if (recorder.playing) {
       env.input = playInputHistory(env);
       if (recorder.currentInput === 1) {
-        console.log("RESET state");
         updatedState = {...recorder.stateSnapshot};
       }
     } else {
