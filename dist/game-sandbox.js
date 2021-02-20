@@ -46,9 +46,6 @@ function initInput() {
 function readInput(env) {
   let input = env.engine.input;
   env.input = Object.assign({}, input.currentInput, input.currentInputP);
-}
-function readInternalInput(env) {
-  let input = env.engine.input;
   env.engine.internalInput = Object.assign({}, input.engineCurrentInput, input.engineCurrentInputP);
 }
 function clearFrameInput(internalInput) {
@@ -164,17 +161,20 @@ function stopRecording(env) {
   let recorder = env.engine.recorder;
   recorder.recording = false;
 }
-function playInputHistory(env) {
-  let recorder = env.engine.recorder;
+function playInputHistory(recorder, currentState) {
   if (!recorder.playing) {
     throw new Error(`Tried to play input history, but recorder is not playing`);
   }
-  if (recorder.inputHistory === 0) {
+  if (recorder.inputHistory.length === 0) {
     throw new Error(`Recorder input history is empty!!`);
   }
   let input = recorder.inputHistory[recorder.currentInput];
+  let state = currentState;
+  if (recorder.currentInput === 0) {
+    state = {...recorder.stateSnapshot};
+  }
   recorder.currentInput = (recorder.currentInput + 1) % recorder.inputHistory.length;
-  return input;
+  return {state, input};
 }
 function recordInput(recorder, input) {
   if (!recorder.recording) {
@@ -228,15 +228,12 @@ function initGame(state, env) {
   let recorder = env.engine.recorder;
   (function gameLoop(time) {
     env.delta = (time - lastTime) / 1e3;
-    if (recorder.playing) {
-      env.input = playInputHistory(env);
-      if (recorder.currentInput === 1) {
-        updatedState = {...recorder.stateSnapshot};
-      }
-    } else {
-      readInput(env);
+    readInput(env);
+    if (recorder.playing && !hud.active) {
+      let {state: state2, input} = playInputHistory(env.engine.recorder, updatedState, env.input);
+      updatedState = state2;
+      env.input = input;
     }
-    readInternalInput(env);
     if (recorder.recording && !hud.active) {
       recordInput(recorder, env.input);
     }
