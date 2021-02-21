@@ -36,9 +36,12 @@
 ** DONE Recalculate canvas BB every time HUD is toggled on
    - Currently, resizing the screen after starting the engine causes the HUD to be misplaced
 ** DONE Record / loop state / go back
+** DONE Load game assets
+** TODO Hot reload of game assets
 ** TODO Manage the canvas parent, so we can have proper HUDs
 ** TODO Replay in slow motion
 ** TODO Play frame by frame
+** TODO Support gamepad input
 ** TODO Introspect state (while playing frame-by-frame)
 ** TODO Implement the ~init~ cli function
 ** TODO Abstract UI widgets so we don't have to write HTML
@@ -55,5 +58,5 @@
 
 * Version 2
 ** TODO Use WebGL
-** TODO Support gamepad input
-** TODO Add parameter to exclude files from watcher
+** TODO Support loading assets in chunks (e.g. loading screen assets, 1st screen assets, ...)
+** TODO [#C] Add parameter to exclude files from watcher

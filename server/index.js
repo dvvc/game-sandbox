@@ -102,13 +102,17 @@ function runFileWatcher(server, watchDir, outputDir) {
  * Ensures the server options are valid
  *
  */
-function validateOptions({ baseDir, outputDir, watchDir }) {
+function validateOptions({ baseDir, outputDir, watchDir, assetsDir }) {
   if (!baseDir) {
     throw new Error(`Missing baseDir`);
   }
 
   if (!outputDir) {
     throw new Error(`Missing outputDir`);
+  }
+
+  if (!assetsDir) {
+    throw new Error(`Missing assetsDir`);
   }
 
   if (!watchDir) {
@@ -121,6 +125,10 @@ function validateOptions({ baseDir, outputDir, watchDir }) {
 
   if (!path.isAbsolute(outputDir)) {
     throw new Error(`Output dir must be absolute`);
+  }
+
+  if (!path.isAbsolute(assetsDir)) {
+    throw new Error(`Assets dir must be absolute`);
   }
 
   if (!path.isAbsolute(watchDir)) {
@@ -137,6 +145,18 @@ function validateOptions({ baseDir, outputDir, watchDir }) {
 
   if (!stats.isDirectory()) {
     console.error(`Could not open ${baseDir}, or not a valid directory`);
+    process.exit(1);
+  }
+
+  try {
+    stats = fs.statSync(assetsDir);
+  } catch (e) {
+    console.error(`Could not find directory '${assetsDir}'\n${e.messsage}`);
+    process.exit(1);
+  }
+
+  if (!stats.isDirectory()) {
+    console.error(`Could not open ${assetsDir}, or not a valid directory`);
     process.exit(1);
   }
 
@@ -160,6 +180,7 @@ function validateOptions({ baseDir, outputDir, watchDir }) {
  *
  *   baseDir:   Where to serve files from
  *   outputDir: Where to create the output bundle
+ *   assetsDir: Where the assets are stored
  *   watch:     (Optional) Whether to watch for file changes
  *   watchDir:  (Optional) Directory to monitor for changes
  *   port:      (Optional) Port to bind to
@@ -168,13 +189,14 @@ function validateOptions({ baseDir, outputDir, watchDir }) {
 function run(args) {
   validateOptions(args);
 
-  let { baseDir, outputDir, watchDir } = args;
+  let { baseDir, outputDir, watchDir, assetsDir } = args;
 
   // Create the output dir if it doesn't exist
   fs.mkdirSync(outputDir, { recursive: true });
 
   const buildServer = serveStatic(outputDir);
   const rootServer = serveStatic(baseDir);
+  const assetsServer = serveStatic(assetsDir);
 
   // Convenience endpoint to serve the dist library
   const libPath = path.resolve('node_modules/game-sandbox/dist');
@@ -187,6 +209,10 @@ function run(args) {
       // TODO: This is kind of sloppy
       req.url = req.url.substr(6);
       return buildServer(req, res, done);
+    } else if (req.url.startsWith('/assets')) {
+      // TODO: This is kind of sloppy
+      req.url = req.url.substr(7);
+      return assetsServer(req, res, done);
     } else if (req.url.startsWith('/game-sandbox.js')) {
       return libServer(req, res, done);
     }
@@ -196,13 +222,14 @@ function run(args) {
 
   // File watcher
   if (args.watch) {
-    runFileWatcher(server, watchDir, outputDir);
+    runFileWatcher(server, watchDir, outputDir, assetsDir);
   }
 
   server.listen(args.port || 8080, () => {
     const address = server.address();
     console.log(`Server listening at ${address.address}:${address.port}`);
     console.log(`Serving files from ${baseDir}`);
+    console.log(`Serving assets from ${assetsDir}`);
     console.log(`Watching changes in ${watchDir}`);
     console.log(`Generating output in ${outputDir}`);
     console.log(`Serving game-sandbox.js from ${libPath}`);

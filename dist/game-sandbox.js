@@ -131,6 +131,37 @@ function updateHud(hud, internalInput, input) {
   updateHudCommandSelection(hud, input);
 }
 
+// lib/assets.js
+var ASSETS_URL = "/assets/";
+function imageLoaded(img) {
+  return new Promise((resolve, reject) => {
+    if (img.complete) {
+      resolve(img);
+    } else {
+      img.addEventListener("load", () => resolve(img));
+      img.addEventListener("error", reject);
+    }
+  });
+}
+function loadAssets(assets, assetsDescription) {
+  let imageLoadedPromises = [];
+  assets.loaded = false;
+  Object.entries(assetsDescription).forEach(([k, v]) => {
+    assets[k] = new Image();
+    assets[k].src = ASSETS_URL + v;
+    imageLoadedPromises.push(imageLoaded(assets[k]));
+  });
+  Promise.all(imageLoadedPromises).then(() => {
+    assets.loaded = true;
+  });
+}
+function initAssets() {
+  let assets = {
+    load: (assetsDescription) => loadAssets(assets, assetsDescription)
+  };
+  return assets;
+}
+
 // lib/recorder.js
 var MAX_RECORDER_SIZE = 60 * 60 * 5;
 function initRecorder() {
@@ -217,7 +248,8 @@ function initEnv(opts) {
     height,
     input: {},
     delta: 0,
-    engine: initEngine(canvasEl)
+    engine: initEngine(canvasEl),
+    assets: initAssets()
   };
 }
 function initGame(state, env) {
@@ -287,7 +319,7 @@ function startGameClient(moduleUrl, env) {
     }
   });
 }
-async function runGame(opts) {
+function runGame(opts) {
   opts = Object.assign({}, OPT_DEFAULTS, opts);
   if (!opts.moduleUrl) {
     throw new Error(`Must provide a moduleUrl`);

@@ -23,6 +23,7 @@ General options
 Start options
   -d, --base-dir <path>    Serve files under path
   -o, --output <path>      Generate output files at path
+  -a, --assets-dir <path>  Where assets are stored
   -w, --watch              Watch for changes (default: false)
       --watch-dir <path>   Directory where to watch file changes (default: base-dir)
   -p, --port               Port to listen to (default: ${DEFAULT_SERVER_PORT})
@@ -51,6 +52,9 @@ const cli = meow(USAGE, {
     baseDir: {
       alias: 'd',
       isRequired: (_, input) => input[0] === 'start',
+    },
+    assetsDir: {
+      alias: 'a',
     },
     outputDir: {
       alias: 'o',
@@ -97,6 +101,7 @@ if (cli.flags.port) {
 if (command === 'start') {
   let absoluteBaseDir = makeAbsoluteToCWD(cli.flags.baseDir);
   let absoluteOutputDir = makeAbsoluteToCWD(cli.flags.outputDir);
+  let absoluteAssetsDir = makeAbsoluteToCWD(cli.flags.assetsDir);
   let absoluteWatchDir = cli.flags.watchDir
     ? makeAbsoluteToCWD(cli.flags.watchDir)
     : absoluteBaseDir;
@@ -107,6 +112,7 @@ if (command === 'start') {
     watchDir: absoluteWatchDir,
     baseDir: absoluteBaseDir,
     outputDir: absoluteOutputDir,
+    assetsDir: absoluteAssetsDir,
   });
 } else {
   console.error('NOT IMPLEMENTED YET!');
