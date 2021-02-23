@@ -179,7 +179,7 @@ function startRecording(env, updatedState) {
   recorder.stateSnapshot = updatedState;
   recorder.playing = false;
   recorder.currentInput = 0;
-  recorder.stateSnapshot = {...updatedState};
+  recorder.stateSnapshot = JSON.parse(JSON.stringify(updatedState));
   recorder.inputHistory = [];
 }
 function playRecording(env) {
@@ -202,7 +202,7 @@ function playInputHistory(recorder, currentState) {
   let input = recorder.inputHistory[recorder.currentInput];
   let state = currentState;
   if (recorder.currentInput === 0) {
-    state = {...recorder.stateSnapshot};
+    state = JSON.parse(JSON.stringify(recorder.stateSnapshot));
   }
   recorder.currentInput = (recorder.currentInput + 1) % recorder.inputHistory.length;
   return {state, input};
@@ -280,7 +280,7 @@ function initGame(state, env) {
           startRecording(env, updatedState);
         } else if (selectedCommand === 1) {
           playRecording(env);
-          updatedState = {...recorder.stateSnapshot};
+          updatedState = JSON.parse(JSON.stringify(recorder.stateSnapshot));
         } else if (selectedCommand === 2) {
           stopRecording(env);
         }
