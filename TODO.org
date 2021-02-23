@@ -37,6 +37,7 @@
    - Currently, resizing the screen after starting the engine causes the HUD to be misplaced
 ** DONE Record / loop state / go back
 ** DONE Load game assets
+** DONE Animations
 ** TODO Hot reload of game assets
 ** TODO Manage the canvas parent, so we can have proper HUDs
 ** TODO Replay in slow motion
@@ -53,10 +54,27 @@
 ** TODO The ~runGame~ moduleUrl parameter is confusing
 ** FIXME Detect clashes with made up ~build~ url if the base dir has a ~build~ subdirectory
 ** FIXME Reposition HUD when window changes size
-
+** TODO Make it easier to add animations
+   - Right now, the user needs to define all the possible animations (for each entity) and then keep
+     track of which one is active.
+** TODO Improve animations interface
+   - The interface is not easy to use, drawAnimation takes a lot of parameters
 
 
 * Version 2
 ** TODO Use WebGL
 ** TODO Support loading assets in chunks (e.g. loading screen assets, 1st screen assets, ...)
 ** TODO [#C] Add parameter to exclude files from watcher
+** TODO Figure out a way to deal with external imports / modules
+   We want game-sandbox to provide some functions to help development, such as drawing animated
+   assets, etc. Users of the library would import those libraries in their code, e.g.:
+   ~import { assets } from '/game-sandbox.js'~. However, since user code is bundled by ESBuild, it
+   will try to resolve that kind of import **at build time** rather than at runtime.
+
+   One solution is to mark ~/game-sandbox.js~ as an external library, so that ESBuild does not try to
+   bundle it. Another way would be to use a build time import like ~import { assets } from
+   'game-sandbox'~, however this is weird because we are already importing '/game-sandbox.js' to get
+   runGame and it would be confusing.
+
+   Another solution would be to provide a different module / npm package for utilities, so we don't
+   mix things.

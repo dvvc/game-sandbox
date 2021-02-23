@@ -1,3 +1,9 @@
+var __defProp = Object.defineProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {get: all[name], enumerable: true});
+};
+
 // lib/input.js
 var KEY_MAP = {
   ArrowRight: "right",
@@ -132,14 +138,22 @@ function updateHud(hud, internalInput, input) {
 }
 
 // lib/assets.js
+var assets_exports = {};
+__export(assets_exports, {
+  initAssets: () => initAssets
+});
 var ASSETS_URL = "/assets/";
-function imageLoaded(img) {
+function imageLoaded(asset) {
   return new Promise((resolve, reject) => {
-    if (img.complete) {
-      resolve(img);
+    if (asset.image.complete) {
+      asset.loaded = true;
+      resolve(asset);
     } else {
-      img.addEventListener("load", () => resolve(img));
-      img.addEventListener("error", reject);
+      asset.image.addEventListener("load", () => {
+        asset.loaded = true;
+        resolve(asset);
+      });
+      asset.image.addEventListener("error", reject);
     }
   });
 }
@@ -147,8 +161,8 @@ function loadAssets(assets, assetsDescription) {
   let imageLoadedPromises = [];
   assets.loaded = false;
   Object.entries(assetsDescription).forEach(([k, v]) => {
-    assets[k] = new Image();
-    assets[k].src = ASSETS_URL + v;
+    assets[k] = {loaded: false, image: new Image()};
+    assets[k].image.src = ASSETS_URL + v;
     imageLoadedPromises.push(imageLoaded(assets[k]));
   });
   Promise.all(imageLoadedPromises).then(() => {
@@ -329,7 +343,52 @@ function runGame(opts) {
     startGameClient(opts.moduleUrl, env);
   });
 }
+
+// lib/animations.js
+var animations_exports = {};
+__export(animations_exports, {
+  createAnimation: () => createAnimation,
+  drawAnimation: () => drawAnimation
+});
+function drawAnimation(animation, x, y, width, height, assets, delta, ctx, flip = false) {
+  let asset = assets[animation.assetName];
+  if (!asset || !asset.loaded) {
+    throw new Error(`Asset ${animation.assetName} not loaded!!!`);
+  }
+  animation.time += delta;
+  if (animation.time > animation.timePerFrame) {
+    animation.time = 0;
+    animation.currentFrame = (animation.currentFrame + 1) % animation.frames.length;
+  }
+  let columns = asset.image.width / animation.width;
+  let sourceY = Math.trunc(animation.currentFrame / columns) * animation.height;
+  let sourceX = animation.currentFrame % columns * animation.width;
+  if (flip) {
+    x += width;
+  }
+  ctx.save();
+  ctx.translate(x, y);
+  if (flip) {
+    ctx.scale(-1, 1);
+  }
+  ctx.drawImage(asset.image, sourceX, sourceY, animation.width, animation.height, 0, 0, width, height);
+  ctx.restore();
+}
+function createAnimation(assetName, {width, height, speed, loop, frames}) {
+  return {
+    currentFrame: 0,
+    time: 0,
+    assetName,
+    loop,
+    width,
+    height,
+    frames,
+    timePerFrame: 1 / speed
+  };
+}
 export {
+  animations_exports as animations,
+  assets_exports as assets,
   runGame
 };
 //# sourceMappingURL=game-sandbox.js.map

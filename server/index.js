@@ -41,6 +41,7 @@ async function rebuildBundle(wss, entryPoint, outputDir) {
       sourcemap: true,
       format: 'esm',
       incremental: true,
+      external: ['/game-sandbox.js'],
     });
     console.timeEnd('esbuild');
 
