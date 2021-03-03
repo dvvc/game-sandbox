@@ -361,8 +361,9 @@ function drawAnimation(animation, x, y, width, height, assets, delta, ctx, flip 
     animation.currentFrame = (animation.currentFrame + 1) % animation.frames.length;
   }
   let columns = asset.image.width / animation.width;
-  let sourceY = Math.trunc(animation.currentFrame / columns) * animation.height;
-  let sourceX = animation.currentFrame % columns * animation.width;
+  let frameIndex = animation.frames[animation.currentFrame];
+  let sourceY = Math.trunc(frameIndex / columns) * animation.height;
+  let sourceX = frameIndex % columns * animation.width;
   if (flip) {
     x += width;
   }
