@@ -38,6 +38,7 @@
 ** DONE Record / loop state / go back
 ** DONE Load game assets
 ** DONE Animations
+** DONE Add examples
 ** TODO Hot reload of game assets
 ** TODO Manage the canvas parent, so we can have proper HUDs
 ** TODO Replay in slow motion
