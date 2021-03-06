@@ -19,30 +19,48 @@ $ npm install game-sandbox
 
 # Quick Start
 
-Create a new npm project, install the npm `game-sandbox` module and create a skeleton project:
+You can get started quickly by installing `game-sandbox` globally and generating an initial skeleton project:
 
 ```sh
-$ mkdir mygame
+$ npm install -g game-sandbox
+$ game-sandbox init mygame
 $ cd mygame
-$ npm init -y
-$ npm install game-sandbox
-$ game-sandbox init
+$ npm install
+$ npm run start
 ```
 
-Start the server:
+Point your browser to `http://localhost:8080` to run the sample project. Then, open `src/game/index.js` in your favorite editor and start editing it. The changes will be visible immediately after they are saved in the browser window.
+
+# Documentation
+
+The Game Sandbox live-reload server is started via a Command Line Interface. Running `game-sandbox help` displays its documentation:
 
 ```sh
-$ game-sandbox start \
-   --watch \
-   --base-dir src \
-   --watch-dir src/game \
-   --assets-dir assets \
-   --output-dir dist
+$ game-sandbox help
+
+  Game Sandbox: A game prototyping framework
+
+  Usage: game-sandbox <command> [options]
+
+  Commands
+    init <name>              Creates a basic project skeleton under directory <name>
+    start                    Starts the development server
+    help                     Show this help
+
+  General options
+    -h, --help               Show this help
+    -v, --version            Show the program version
+
+  Start options
+    -d, --base-dir <path>    Serve files under path
+    -o, --output <path>      Generate output files at path
+    -a, --assets-dir <path>  Where assets are stored
+    -w, --watch              Watch for changes (default: false)
+        --watch-dir <path>   Directory where to watch file changes (default: base-dir)
+    -p, --port               Port to listen to (default: 8080)
 ```
 
-Point your browser to `http://localhost:8080`, and start modifying the source in `src/game/index.js`.
-
-# Usage
+Once started, the server serves all files under the directory specified in `base-dir`, such as the `index.html`, and also watches all files under the `watch-dir` directory and tells the browser to reload the game code.
 
 The `runGame()` function is the entry point of your game. It is called like this:
 
@@ -52,16 +70,16 @@ The `runGame()` function is the entry point of your game. It is called like this
     runGame({
       width: 400,
       height: 400,
-      canvasId: 'game-canvas',
-      moduleUrl: './mygame.js',
+      canvasId: 'canvas',
+      moduleUrl: './index.js',
     });
 ```
 
-The game logic is defined inside two functions: `setup()` and `draw()`, which must be exported by the module defined in the `moduleUrl` attribute passed to `runGame()`.
+Where `width` and `height` are the game's canvas dimensions, `canvasId` is the `id` attribute of the canvas element in your html, and `moduleUrl` is the starting point of your game, relative to the directory passed to `watch-dir`. The file your specify in `moduleUrl` must export two functions, `setup()` and `draw()`.
 
-Once started, the Game Sandbox server watches the directory specified in the `watch-dir` option. When a file is changed, it generates a bundle with the game code and notifies the browser. The browser then reloads the `draw()` function between frames so your game is updated seamlessly.
+When a file under `watch-dir` changes, the server generates a bundle with the game code and notifies the browser. The browser then reloads the `draw()` function between frames so your game is updated seamlessly.
 
-# How it works
+## How it works
 
 Game Sandbox is inspired by [Reprocessing](https://github.com/Schmavery/reprocessing), which in turn is influenced by [Processing](https://processing.org/). The main idea is the game state is separated from the game logic, which helps performing reloads without resetting the game.
 
@@ -71,7 +89,7 @@ attributes that represent your game, such as the player's position, etc.
 The `draw()` function has two parameters, the current game state and an `Environment` object, which contains attributes such as the game width and height, a reference to the canvas context, or the
 user input.
 
-## Example
+### Example
 
 ```js
     export function setup(env) {

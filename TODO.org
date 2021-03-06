@@ -39,6 +39,7 @@
 ** DONE Load game assets
 ** DONE Animations
 ** DONE Add examples
+** DONE Implement the ~init~ cli function
 ** TODO Hot reload of game assets
 ** TODO Manage the canvas parent, so we can have proper HUDs
 ** TODO Replay in slow motion
@@ -47,7 +48,6 @@
 ** TODO Introspect state (while playing frame-by-frame)
 ** TODO Add timers
 ** TODO Text rendering
-** TODO Implement the ~init~ cli function
 ** TODO Abstract UI widgets so we don't have to write HTML
 ** TODO Handle esbuild errors gracefully (e.g. notify client?)
 ** TODO When there's an error, the client should not keep going. Also, how to recover?

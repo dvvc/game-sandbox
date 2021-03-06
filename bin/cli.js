@@ -4,6 +4,7 @@ const meow = require('meow');
 const path = require('path');
 
 const server = require('../server/index.js');
+const init = require('../cli/init.js');
 
 const VALID_COMMANDS = ['init', 'start', 'help'];
 const DEFAULT_SERVER_PORT = 8080;
@@ -12,7 +13,7 @@ const USAGE = `
 Usage: game-sandbox <command> [options]
 
 Commands
-  init                     Creates a basic project skeleton
+  init <name>              Creates a basic project skeleton under directory <name>
   start                    Starts the development server
   help                     Show this help
 
@@ -114,6 +115,20 @@ if (command === 'start') {
     outputDir: absoluteOutputDir,
     assetsDir: absoluteAssetsDir,
   });
+} else if (command === 'init') {
+  let projectName = cli.input[1];
+  if (!projectName) {
+    console.error(`Missing project name`);
+    printUsageAndExit(1);
+  }
+
+  let absoluteProjectName = makeAbsoluteToCWD(projectName);
+  try {
+    init(absoluteProjectName);
+  } catch (e) {
+    console.error(e.message);
+    process.exit(1);
+  }
 } else {
   console.error('NOT IMPLEMENTED YET!');
 }
