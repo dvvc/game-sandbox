@@ -350,15 +350,20 @@ __export(animations_exports, {
   createAnimation: () => createAnimation,
   drawAnimation: () => drawAnimation
 });
-function drawAnimation(animation, x, y, width, height, assets, delta, ctx, flip = false) {
+function drawAnimation(animation, x, y, width, height, assets, delta, ctx, flip = false, rotation = 0) {
   let asset = assets[animation.assetName];
   if (!asset || !asset.loaded) {
     throw new Error(`Asset ${animation.assetName} not loaded!!!`);
   }
   animation.time += delta;
+  let complete = false;
   if (animation.time > animation.timePerFrame) {
     animation.time = 0;
-    animation.currentFrame = (animation.currentFrame + 1) % animation.frames.length;
+    animation.currentFrame++;
+    if (animation.currentFrame >= animation.frames.length) {
+      complete = true;
+      animation.currentFrame = 0;
+    }
   }
   let columns = asset.image.width / animation.width;
   let frameIndex = animation.frames[animation.currentFrame];
@@ -369,11 +374,15 @@ function drawAnimation(animation, x, y, width, height, assets, delta, ctx, flip 
   }
   ctx.save();
   ctx.translate(x, y);
+  if (rotation) {
+    ctx.rotate(rotation);
+  }
   if (flip) {
     ctx.scale(-1, 1);
   }
   ctx.drawImage(asset.image, sourceX, sourceY, animation.width, animation.height, 0, 0, width, height);
   ctx.restore();
+  return complete;
 }
 function createAnimation(assetName, {width, height, speed, loop, frames}) {
   return {

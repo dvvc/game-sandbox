@@ -44,6 +44,8 @@
 ** TODO Play frame by frame
 ** TODO Support gamepad input
 ** TODO Introspect state (while playing frame-by-frame)
+** TODO Add timers
+** TODO Text rendering
 ** TODO Implement the ~init~ cli function
 ** TODO Abstract UI widgets so we don't have to write HTML
 ** TODO Handle esbuild errors gracefully (e.g. notify client?)
