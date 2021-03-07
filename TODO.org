@@ -41,10 +41,10 @@
 ** DONE Add examples
 ** DONE Implement the ~init~ cli function
 ** DONE Hot reload of game assets
-** TODO Manage the canvas parent, so we can have proper HUDs
-** TODO Replay in slow motion
-** TODO Play frame by frame
+** DONE Replay in slow motion
+** DONE Play frame by frame
 ** TODO Support gamepad input
+** TODO Manage the canvas parent, so we can have proper HUDs
 ** TODO Introspect state (while playing frame-by-frame)
 ** TODO Add timers
 ** TODO Text rendering
@@ -110,3 +110,10 @@
    Sometimes, image editors such as GIMP generate multiple update events on file save. We should
    throttle these events to avoid triggering multiple image reloads per change
 ** TODO Sound assets
+** TODO Frame-by-frame in reverse
+   Since we calculate the state as ~prevState~ + ~input~, and recordings are just an initial state + a
+   list of recorded inputs, it is not currently possible to play recordings in reverse (since one
+   cannot calculate a previousState from a currentState + input). One solution to this is every time
+   we generate a state, we do it for *all the stored inputs*. For example, if we have
+   ~recordedInputs = [i0,i1,...in]~, and ~initialState~, every update we calculate
+   ~states=[s0,s1,...sn]~. That way we can go back to the previous state.

@@ -220,6 +220,7 @@ function initRecorder() {
   return {
     recording: false,
     playing: false,
+    frameByFrame: false,
     currentInput: 0,
     stateSnapshot: void 0,
     inputHistory: []
@@ -238,6 +239,14 @@ function playRecording(env) {
   let recorder = env.engine.recorder;
   stopRecording(env);
   recorder.playing = true;
+  recorder.frameByFrame = false;
+  recorder.currentInput = 0;
+}
+function playFrameByFrame(env) {
+  let recorder = env.engine.recorder;
+  stopRecording(env);
+  recorder.playing = true;
+  recorder.frameByFrame = true;
   recorder.currentInput = 0;
 }
 function stopRecording(env) {
@@ -282,7 +291,8 @@ var HUD_COMMANDS = [
   {label: "Start recording", action: hudStartRecording},
   {label: "Cancel recording", action: hudStopRecording},
   {label: "Play recording", action: hudPlayRecording},
-  {label: "Stop playing", action: hudStopPlaying}
+  {label: "Stop playing", action: hudStopPlaying},
+  {label: "Frame-by-frame", action: hudPlayFrameByFrame}
 ];
 function hudStartRecording(state, env) {
   toggleHud(env.engine.hud);
@@ -303,6 +313,11 @@ function hudStopPlaying(state, env) {
   toggleHud(env.engine.hud);
   stopPlaying(env);
   return state;
+}
+function hudPlayFrameByFrame(state, env) {
+  toggleHud(env.engine.hud);
+  playFrameByFrame(env);
+  return JSON.parse(JSON.stringify(env.engine.recorder.stateSnapshot));
 }
 function initEngine(canvasEl) {
   return {
@@ -342,10 +357,20 @@ function initGame(state, env) {
   (function gameLoop(time) {
     env.delta = (time - lastTime) / 1e3;
     readInput(env);
+    let playFrame = true;
     if (recorder.playing && !hud.active) {
-      let {state: state2, input} = playInputHistory(env.engine.recorder, updatedState, env.input);
-      updatedState = state2;
-      env.input = input;
+      if (recorder.frameByFrame) {
+        playFrame = env.input.rightp;
+        if (playFrame) {
+          let {state: state2, input} = playInputHistory(env.engine.recorder, updatedState);
+          updatedState = state2;
+          env.input = input;
+        }
+      } else {
+        let {state: state2, input} = playInputHistory(env.engine.recorder, updatedState);
+        updatedState = state2;
+        env.input = input;
+      }
     }
     if (recorder.recording && !hud.active) {
       recordInput(recorder, env.input);
@@ -355,8 +380,13 @@ function initGame(state, env) {
     }
     if (hud.active) {
       updatedState = processHud(updatedState, env);
+      if (recorder.playing && recorder.frameByFrame) {
+        updatedState = env.engine.draw(updatedState, env);
+      }
     } else {
-      updatedState = env.engine.draw(updatedState, env);
+      if (playFrame) {
+        updatedState = env.engine.draw(updatedState, env);
+      }
     }
     clearFrameInput(env.engine.input);
     lastTime = time;
