@@ -78,6 +78,10 @@
 
 * Version 2
 ** TODO Use WebGL
+** TODO Create a ~prod~ build of the game
+   Once the prototyping is finished, there should be a way to generate a ~prod~ version of the game
+   where all the live update code is not run and the engine has better performance. Perhaps an
+   "eject" command of the CLI that uses an alternate game-sandbox.prod.js dist file?
 ** TODO Support loading assets in chunks (e.g. loading screen assets, 1st screen assets, ...)
 ** TODO [#C] Add parameter to exclude files from watcher
 ** TODO Figure out a way to deal with external imports / modules

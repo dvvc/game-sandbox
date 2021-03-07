@@ -25,6 +25,7 @@
     "game-sandbox": "bin/cli.js"
   },
   "files": [
+    "cli",
     "server",
     "lib",
     "dist"

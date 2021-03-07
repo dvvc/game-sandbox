@@ -3,6 +3,8 @@
 
 A live editing framework for game prototyping in JavaScript.
 
+*This project is still in a very early stage! Things may&mdash;and will&mdash;break*
+
 # Features
 
   - Hot code reloading.
@@ -35,7 +37,7 @@ Point your browser to `http://localhost:8080` to run the sample project. Then, o
 
 The Game Sandbox live-reload server is started via a Command Line Interface. Running `game-sandbox help` displays its documentation:
 
-```sh
+```
 $ game-sandbox help
 
   Game Sandbox: A game prototyping framework
@@ -122,6 +124,21 @@ user input.
       return state;
     }
 ```
+
+# Running the examples
+
+To run the examples, clone the project from github, then go to the examples directory, npm install and run them. For example:
+
+```sh
+
+$ git clone https://github.com/dvvc/game-sandbox.git
+$ cd game-sandbox/examples/jumpy
+$ npm install
+$ npm run start
+
+```
+
+Then point your browser to `http://localhost:8080` and edit `game-sandbox/examples/jumpy/src/game/index.js`
 
 # Advanced usage
 
