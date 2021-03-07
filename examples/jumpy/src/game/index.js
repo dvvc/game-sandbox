@@ -246,7 +246,7 @@ export function draw(state, { input, ctx, width, height, delta, assets }) {
   ctx.strokeStyle = 'black';
   // detect collision with a platform
   // filter those that are close to the player
-  let closePlatforms = state.platforms.filter(p => Math.abs(p.y - state.y) < 400);
+  let closePlatforms = state.platforms.filter(p => Math.abs(p.y - state.y) < height);
   if (!state.hit) {
     for (let p of closePlatforms) {
       if (state.x >= p.x - ledgeCheat && state.x <= p.x + p.w + ledgeCheat) {
@@ -279,14 +279,14 @@ export function draw(state, { input, ctx, width, height, delta, assets }) {
 
   // update clouds close to player
   updateClouds(
-    state.clouds.filter(c => Math.abs(c.y - state.y) < 400),
+    state.clouds.filter(c => Math.abs(c.y - state.y) < height),
     width,
     delta
   );
 
   // update birds
   updateBirds(
-    state.birds.filter(b => b.alive && Math.abs(b.y - state.y) < 400),
+    state.birds.filter(b => b.alive && Math.abs(b.y - state.y) < height),
     width,
     delta
   );
