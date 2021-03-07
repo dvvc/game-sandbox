@@ -130,3 +130,7 @@ user input.
 Game Sandbox can load assets and update them in real time, same as the code. In order to do this, you must specify an `assets-dir` value in the `game-sandbox` server, and then call `env.assets.load()` in the `setup()` function.
 
 The `assets.load()` function receives an object as a parameter where the keys are the names of the assets you'll use in your code to identify them, and the values are strings with a path to the asset, relative to the `assets-dir`. When `assets.load()` is called, it will start loading all the assets in the argument and set `env.assets.loaded` to true when they are loaded. This value can be consulted in the `draw()` function to decide when to start the game (usually you'll want to wait until all assets are loaded before doing anything).
+
+# Acknowledgments
+
+Most of the assets used in the examples come from [Kenney's Assets](https://kenney.nl)

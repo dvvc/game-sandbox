@@ -1,5 +1,5 @@
 {
-  "name": "mygame",
+  "name": "assets",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,12 +7,10 @@
     "start": "game-sandbox start -w -d src --watch-dir src/game -o dist -a assets",
     "watch": "nodemon -w node_modules/game-sandbox/dist/game-sandbox.js --exec npm run start"
   },
+  "dependencies": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "game-sandbox": "^0.1.4"
-  },
   "devDependencies": {
     "nodemon": "^2.0.7"
   }

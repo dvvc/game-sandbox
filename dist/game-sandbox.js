@@ -140,33 +140,47 @@ function updateHud(hud, internalInput, input) {
 // lib/assets.js
 var assets_exports = {};
 __export(assets_exports, {
-  initAssets: () => initAssets
+  initAssets: () => initAssets,
+  reloadAsset: () => reloadAsset
 });
 var ASSETS_URL = "/assets/";
-function imageLoaded(asset) {
+function imageLoaded(image, asset) {
   return new Promise((resolve, reject) => {
-    if (asset.image.complete) {
+    if (image.complete) {
       asset.loaded = true;
       resolve(asset);
     } else {
-      asset.image.addEventListener("load", () => {
+      const markImageLoaded = () => {
         asset.loaded = true;
+        image.removeEventListener("load", markImageLoaded);
         resolve(asset);
-      });
-      asset.image.addEventListener("error", reject);
+      };
+      const imageLoadError = (e) => {
+        image.removeEventListener("error", imageLoadError);
+        reject(e);
+      };
+      image.addEventListener("load", markImageLoaded);
+      image.addEventListener("error", imageLoadError);
     }
   });
+}
+function getAssetUrl(assetPath) {
+  return ASSETS_URL + assetPath;
 }
 function loadAssets(assets, assetsDescription) {
   let imageLoadedPromises = [];
   assets.loaded = false;
   Object.entries(assetsDescription).forEach(([k, v]) => {
-    assets[k] = {loaded: false, image: new Image()};
-    assets[k].image.src = ASSETS_URL + v;
-    imageLoadedPromises.push(imageLoaded(assets[k]));
+    let image = new Image();
+    assets[k] = {loaded: false, image};
+    assets[k].path = v;
+    assets[k].image.src = getAssetUrl(v);
+    imageLoadedPromises.push(imageLoaded(image, assets[k]));
   });
-  Promise.all(imageLoadedPromises).then(() => {
+  return Promise.all(imageLoadedPromises).then(() => {
     assets.loaded = true;
+  }).catch((e) => {
+    console.error(`Error loading assets`, e);
   });
 }
 function initAssets() {
@@ -174,6 +188,23 @@ function initAssets() {
     load: (assetsDescription) => loadAssets(assets, assetsDescription)
   };
   return assets;
+}
+async function reloadAsset(assets, assetPath) {
+  let allAssets = Object.values(assets);
+  let changedAsset = allAssets.find((a) => a.path === assetPath);
+  if (!changedAsset) {
+    console.log(`Could not find the asset for ${assetPath}, no updates performed`);
+    return;
+  }
+  let newImage = new Image();
+  newImage.src = getAssetUrl(assetPath) + `?t=${new Date().getTime()}`;
+  try {
+    await imageLoaded(newImage, changedAsset);
+    changedAsset.path = assetPath;
+    changedAsset.image = newImage;
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 // lib/recorder.js
@@ -315,6 +346,7 @@ function startGameClient(moduleUrl, env) {
     if (action === "change" || action === "rebuild") {
       let module;
       try {
+        console.log(`Reloading game code...`);
         module = await import(file + "?t=" + new Date().getTime());
       } catch (e) {
         throw e;
@@ -330,6 +362,9 @@ function startGameClient(moduleUrl, env) {
         engine.initialized = true;
         initGame(state, env);
       }
+    } else if (action === "asset") {
+      console.log(`Reloading asset [${file}]...`);
+      reloadAsset(env.assets, file);
     }
   });
 }

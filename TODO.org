@@ -40,7 +40,7 @@
 ** DONE Animations
 ** DONE Add examples
 ** DONE Implement the ~init~ cli function
-** TODO Hot reload of game assets
+** DONE Hot reload of game assets
 ** TODO Manage the canvas parent, so we can have proper HUDs
 ** TODO Replay in slow motion
 ** TODO Play frame by frame
@@ -52,6 +52,18 @@
 ** TODO Handle esbuild errors gracefully (e.g. notify client?)
 ** TODO When there's an error, the client should not keep going. Also, how to recover?
 ** TODO Game tools (blit image, etc)
+** TODO Use better action names when notifying the wss client
+   We currently use change and rebuild for code, and "asset" for assets. However, this is not good
+   enough to tell if an asset has been added/deleted/changed, etc.
+** FIXME Figure out a better way of dealing with assets
+   We now use an object with a ~load~ attribute and the add new assets as keys to that same
+   object. That makes it possible we have a collision (e.g. an asset named ~load~)
+** TODO Ensure assets-dir and watch-dir do not contain each other
+   Since the watcher monitors changes both in watch-dir and assets-dir and then tries to determine
+   which of the two has changed by looking at the base directory of the changed file, it is possible
+   that if assets-dir was inside of watch-dir, the watcher would get confused and thing the changed
+   file is a code one when it's really an asset. This can be solved by either ensuring assets-dir is
+   not inside of watch-dir (or viceversa), or by improving how we tell where the changed file is.
 ** FIXME Can we be loading stale ~out.js~ from a previously existing dist??
 ** TODO Detect changes to initial state and do a full reload
 ** TODO The ~runGame~ moduleUrl parameter is confusing
@@ -81,3 +93,7 @@
 
    Another solution would be to provide a different module / npm package for utilities, so we don't
    mix things.
+** TODO Throttle asset update events
+   Sometimes, image editors such as GIMP generate multiple update events on file save. We should
+   throttle these events to avoid triggering multiple image reloads per change
+** TODO Sound assets

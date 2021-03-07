@@ -55,10 +55,20 @@ async function rebuildBundle(wss, entryPoint, outputDir) {
 }
 
 /**
- * Start a WS Server, then watch for changes in watchDir and rebuild the bundle accordingly
+ * Notify clients that an asset has changed
  *
  */
-function runFileWatcher(server, watchDir, outputDir) {
+async function notifyAssetChanged(wss, assetPath) {
+  wss.clients.forEach(ws => {
+    ws.send(`asset:${assetPath}`);
+  });
+}
+
+/**
+ * Start a WS Server, then watch for changes in watchDir and assetsDir. Then rebuild the bundle accordingly
+ *
+ */
+function runFileWatcher(server, watchDir, outputDir, assetsDir) {
   // Initialize the WS server
   const wss = new ws.Server({ server });
   wss.on('connection', (ws, req) => {
@@ -79,23 +89,38 @@ function runFileWatcher(server, watchDir, outputDir) {
     console.log('ERROR', e);
   });
 
-  let watcher = chokidar.watch(watchDir, {
+  let watcher = chokidar.watch([watchDir, assetsDir], {
     ignoreInitial: true,
     ignored: filePath => path.basename(filePath).match(/^(\.|#)/),
   });
 
   watcher.on('all', (event, filePath) => {
-    let relative = path.relative(watchDir, filePath);
-    console.log('WATCH', event, relative);
+    // FIXME: This could cause problems if one directory is inside the other
+    if (filePath.startsWith(watchDir)) {
+      let relative = path.relative(watchDir, filePath);
+      console.log(`[WATCHER:CODE:${event.toUpperCase()}] ${relative}`);
+      // No client has connected with a valid entrypoint yet, do not rebuild
+      if (!entryPoint) {
+        console.log(`No entry point defined, skipping update`);
+        return;
+      }
 
-    // No client has connected with a valid entrypoint yet, do not rebuild
-    if (!entryPoint) {
-      console.log(`No entry point defined, skipping update`);
-      return;
+      // Otherwise, rebuild and notify
+      rebuildBundle(wss, entryPoint, outputDir);
+    } else if (filePath.startsWith(assetsDir)) {
+      let relative = path.relative(assetsDir, filePath);
+      console.log(`[WATCHER:ASSET:${event.toUpperCase()}] ${relative}`);
+
+      // We need to wait some time before notifying the clients because some asset editors
+      // (e.g. GIMP) may take a long time between the moment the asset file is first modified and
+      // the time it has saved everything. If we trigger the notification immediately, the client
+      // may try to load the asset before it's in a valid state.
+      setTimeout(() => {
+        notifyAssetChanged(wss, relative);
+      }, 500);
+    } else {
+      throw new Error(`Changed file is not in "watch-dir" or in "assets-dir"`);
     }
-
-    // Otherwise, rebuild and notify
-    rebuildBundle(wss, entryPoint, outputDir);
   });
 }
 
