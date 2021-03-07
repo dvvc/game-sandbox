@@ -81,6 +81,10 @@ Where `width` and `height` are the game's canvas dimensions, `canvasId` is the `
 
 When a file under `watch-dir` changes, the server generates a bundle with the game code and notifies the browser. The browser then reloads the `draw()` function between frames so your game is updated seamlessly.
 
+## In-game tools
+
+Since Game Sandbox stores the state and player input separately from the game logic, it is possible to record and then play black parts of the game. During a session, you can display the in-game menu by pressing the backtick key (~`~). From here, you can start recording the game, then play it back. While a recording is being played, you can still modify the game code to see its effect in real time.
+
 ## How it works
 
 Game Sandbox is inspired by [Reprocessing](https://github.com/Schmavery/reprocessing), which in turn is influenced by [Processing](https://processing.org/). The main idea is the game state is separated from the game logic, which helps performing reloads without resetting the game.
