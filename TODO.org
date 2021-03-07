@@ -64,8 +64,6 @@
    that if assets-dir was inside of watch-dir, the watcher would get confused and thing the changed
    file is a code one when it's really an asset. This can be solved by either ensuring assets-dir is
    not inside of watch-dir (or viceversa), or by improving how we tell where the changed file is.
-** FIXME Can we be loading stale ~out.js~ from a previously existing dist??
-** TODO Detect changes to initial state and do a full reload
 ** TODO The ~runGame~ moduleUrl parameter is confusing
 ** FIXME Detect clashes with made up ~build~ url if the base dir has a ~build~ subdirectory
 ** FIXME Reposition HUD when window changes size
@@ -75,6 +73,17 @@
 ** TODO Improve animations interface
    - The interface is not easy to use, drawAnimation takes a lot of parameters
 
+** TODO Detect changes to initial state and do a full reload
+   This is not an easy change, because it would require re-running ~setup~ at every reload to compare
+   with the initial game state (e.g., if a new attribute is added or changed). However, there are
+   two main problems with this approach:
+    1. There may be code in ~setup~ that is not meant to be run multiple times, such as ~loadAssets~ or
+       re-generation of game stuff such enemies
+    2. There may be random values in state, which would be detected as a change from the original
+       state. For example, if my original state specifies that the player's ~x~ position is ~WIDTH/2~
+       and I change it to ~WIDTH/3~, that's a valid reload of the state, however if the position is
+       set to be ~Math.random() * WIDTH~ that would trigger a reload each frame that we compare the
+       state with the original!
 
 * Version 2
 ** TODO Use WebGL

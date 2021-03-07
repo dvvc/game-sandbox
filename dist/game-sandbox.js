@@ -64,16 +64,25 @@ function clearFrameInput(internalInput) {
 }
 
 // lib/hud.js
-var HUD_COMMANDS = ["Start recording", "Play recording", "Stop recording"];
 var COMMAND_BG = "#555555";
 var COMMAND_FG = "#eeeeee";
+function initHud(canvasBoundingBox, hudCommands) {
+  let hudElement = buildHudElement(canvasBoundingBox, hudCommands);
+  document.body.appendChild(hudElement);
+  return {
+    active: false,
+    selectedCommand: 0,
+    element: hudElement,
+    commands: hudCommands
+  };
+}
 function setHudBoundingBox(hudElement, boundingBox) {
   hudElement.style.top = boundingBox.top + "px";
   hudElement.style.left = boundingBox.left + "px";
   hudElement.style.width = boundingBox.width + "px";
   hudElement.style.height = boundingBox.height + "px";
 }
-function buildHudElement(boundingBox) {
+function buildHudElement(boundingBox, hudCommands) {
   let hudElement = document.createElement("div");
   hudElement.style.position = "absolute";
   setHudBoundingBox(hudElement, boundingBox);
@@ -86,9 +95,9 @@ function buildHudElement(boundingBox) {
   hudCommandList.style.padding = "0 20px";
   hudCommandList.style.marginTop = "40px";
   hudCommandList.style.fontFamily = "monospace";
-  HUD_COMMANDS.forEach((cmd) => {
+  hudCommands.forEach((cmd) => {
     let commandItem = document.createElement("li");
-    commandItem.innerHTML = cmd;
+    commandItem.innerHTML = cmd.label;
     commandItem.style.lineHeight = 1.6;
     commandItem.style.padding = "2px 10px";
     hudCommandList.appendChild(commandItem);
@@ -98,28 +107,17 @@ function buildHudElement(boundingBox) {
   hudElement.appendChild(hudCommandList);
   return hudElement;
 }
-function initHud(canvasBoundingBox) {
-  let hudElement = buildHudElement(canvasBoundingBox);
-  document.body.appendChild(hudElement);
-  return {
-    active: false,
-    selectedCommand: 0,
-    element: hudElement
-  };
-}
-function toggleHud(hud, canvasBoundingBox) {
+function toggleHud(hud) {
   hud.active = !hud.active;
-  if (hud.active) {
-    setHudBoundingBox(hud.element, canvasBoundingBox);
-  }
   hud.element.style.opacity = Number(hud.active);
 }
 function updateHudCommandSelection(hud, input) {
   let newCommandIndex = hud.selectedCommand;
+  let commands = hud.commands;
   if (input.downp) {
-    newCommandIndex = (hud.selectedCommand + 1) % HUD_COMMANDS.length;
+    newCommandIndex = (hud.selectedCommand + 1) % commands.length;
   } else if (input.upp) {
-    newCommandIndex = (hud.selectedCommand - 1 + HUD_COMMANDS.length) % HUD_COMMANDS.length;
+    newCommandIndex = (hud.selectedCommand - 1 + commands.length) % commands.length;
   }
   if (newCommandIndex !== hud.selectedCommand) {
     let commandList = hud.element.firstChild;
@@ -129,6 +127,15 @@ function updateHudCommandSelection(hud, input) {
     commandList.children.item(newCommandIndex).style.color = COMMAND_BG;
     hud.selectedCommand = newCommandIndex;
   }
+}
+function processHud(state, env) {
+  let hud = env.engine.hud;
+  let selectedCommand = updateHud(hud, env.engine.internalInput, env.input);
+  if (selectedCommand !== void 0) {
+    let callback = hud.commands[hud.selectedCommand].action;
+    return callback(state, env);
+  }
+  return state;
 }
 function updateHud(hud, internalInput, input) {
   if (internalInput.enterp) {
@@ -237,6 +244,9 @@ function stopRecording(env) {
   let recorder = env.engine.recorder;
   recorder.recording = false;
 }
+function stopPlaying(env) {
+  env.engine.recorder.playing = false;
+}
 function playInputHistory(recorder, currentState) {
   if (!recorder.playing) {
     throw new Error(`Tried to play input history, but recorder is not playing`);
@@ -268,12 +278,38 @@ var OPT_DEFAULTS = {
   height: 600,
   canvasId: "canvas"
 };
+var HUD_COMMANDS = [
+  {label: "Start recording", action: hudStartRecording},
+  {label: "Cancel recording", action: hudStopRecording},
+  {label: "Play recording", action: hudPlayRecording},
+  {label: "Stop playing", action: hudStopPlaying}
+];
+function hudStartRecording(state, env) {
+  toggleHud(env.engine.hud);
+  startRecording(env, state);
+  return state;
+}
+function hudPlayRecording(state, env) {
+  toggleHud(env.engine.hud);
+  playRecording(env);
+  return JSON.parse(JSON.stringify(env.engine.recorder.stateSnapshot));
+}
+function hudStopRecording(state, env) {
+  toggleHud(env.engine.hud);
+  stopRecording(env);
+  return state;
+}
+function hudStopPlaying(state, env) {
+  toggleHud(env.engine.hud);
+  stopPlaying(env);
+  return state;
+}
 function initEngine(canvasEl) {
   return {
     initialized: false,
     recorder: initRecorder(),
     input: initInput(),
-    hud: initHud(canvasEl.getBoundingClientRect()),
+    hud: initHud(canvasEl.getBoundingClientRect(), HUD_COMMANDS),
     canvasEl
   };
 }
@@ -318,18 +354,7 @@ function initGame(state, env) {
       toggleHud(hud, canvasEl.getBoundingClientRect());
     }
     if (hud.active) {
-      let selectedCommand = updateHud(hud, env.engine.internalInput, env.input);
-      if (selectedCommand !== void 0) {
-        toggleHud(hud, canvasEl.getBoundingClientRect());
-        if (selectedCommand === 0) {
-          startRecording(env, updatedState);
-        } else if (selectedCommand === 1) {
-          playRecording(env);
-          updatedState = JSON.parse(JSON.stringify(recorder.stateSnapshot));
-        } else if (selectedCommand === 2) {
-          stopRecording(env);
-        }
-      }
+      updatedState = processHud(updatedState, env);
     } else {
       updatedState = env.engine.draw(updatedState, env);
     }
