@@ -28,6 +28,9 @@ Start options
   -w, --watch              Watch for changes (default: false)
       --watch-dir <path>   Directory where to watch file changes (default: base-dir)
   -p, --port               Port to listen to (default: ${DEFAULT_SERVER_PORT})
+
+Init options
+  --dev                    [Development only] Add a "watch" script to package.json
 `;
 
 function printUsageAndExit(code) {
@@ -42,6 +45,9 @@ function makeAbsoluteToCWD(pathStr) {
 const cli = meow(USAGE, {
   allowUnknownFlags: false,
   flags: {
+    dev: {
+      type: 'boolean',
+    },
     port: {
       alias: 'p',
     },
@@ -49,7 +55,9 @@ const cli = meow(USAGE, {
       alias: 'w',
       isRequired: flags => !!flags.watchDir,
     },
-    watchDir: {},
+    watchDir: {
+      type: 'string',
+    },
     baseDir: {
       alias: 'd',
       isRequired: (_, input) => input[0] === 'start',
@@ -124,7 +132,7 @@ if (command === 'start') {
 
   let absoluteProjectName = makeAbsoluteToCWD(projectName);
   try {
-    init(absoluteProjectName);
+    init(absoluteProjectName, cli.flags.dev);
   } catch (e) {
     console.error(e.message);
     process.exit(1);

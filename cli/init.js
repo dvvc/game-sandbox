@@ -3,21 +3,19 @@ const fs = require('fs');
 
 const parentPackageJson = require('../package.json');
 
-const PACKAGE_JSON = `{
-  "name": "$NAME$",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "game-sandbox start -w -d src --watch-dir src/game -o dist -a assets"
+const PACKAGE_JSON = {
+  name: '',
+  version: '1.0.0',
+  description: 'foo',
+  main: 'index.js',
+  scripts: {
+    start: 'game-sandbox start -w -d src --watch-dir src/game -o dist -a assets',
   },
-  "dependencies": {
-    "game-sandbox": "^$PKG_VERSION$"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
-}`;
+  dependencies: {},
+  keywords: [],
+  author: '',
+  license: 'ISC',
+};
 
 const INDEX_HTML = `<!doctype html>
 <html>
@@ -104,8 +102,11 @@ export function draw(state, { delta, width, height, ctx }) {
 /**
  * Creates a new project with some basic files
  *
+ * Parameters:
+ *  - absoluteProjectName: The absolute path of the project
+ *  - dev (Development only): Add a watch scrip to package.json
  */
-module.exports = function init(absoluteProjectName) {
+module.exports = function init(absoluteProjectName, dev = false) {
   if (!path.isAbsolute(absoluteProjectName)) {
     throw new Error(`Project name must be absolute`);
   }
@@ -130,12 +131,23 @@ module.exports = function init(absoluteProjectName) {
   let projectName = path.basename(absoluteProjectName);
   let packageVersion = parentPackageJson.version;
 
-  let packageJsonContents = PACKAGE_JSON.replace('$NAME$', projectName).replace(
-    '$PKG_VERSION$',
-    packageVersion
-  );
+  let packageJsonContents = PACKAGE_JSON;
+  packageJsonContents.name = projectName;
+  packageJsonContents.dependencies = {
+    'game-sandbox': `^${packageVersion}`,
+  };
 
-  fs.writeFileSync(packageJson, packageJsonContents, 'utf8');
+  // ** DEVELOPMENT ONLY **
+  if (dev) {
+    packageJsonContents.scripts.watch =
+      'nodemon -w node_modules/game-sandbox/dist/game-sandbox.js --exec npm run start';
+    packageJsonContents.devDependencies = {
+      nodemon: '^2.0.7',
+    };
+  }
+  // ** ** **
+
+  fs.writeFileSync(packageJson, JSON.stringify(packageJsonContents, null, 2), 'utf8');
 
   // Create source and asset directories
   let sourceDir = path.resolve(absoluteProjectName, 'src/game');
