@@ -285,7 +285,8 @@ function recordInput(recorder, input) {
 var OPT_DEFAULTS = {
   width: 600,
   height: 600,
-  canvasId: "canvas"
+  canvasId: "canvas",
+  offscreen: false
 };
 var HUD_COMMANDS = [
   {label: "Start recording", action: hudStartRecording},
@@ -338,8 +339,18 @@ function initEnv(opts) {
   canvasEl.style.width = width + "px";
   canvasEl.style.height = height + "px";
   ctx.scale(dpr, dpr);
+  let offscreenCtx;
+  let offscreenCanvasEl;
+  if (opts.offscreen) {
+    offscreenCanvasEl = document.createElement("canvas");
+    offscreenCtx = offscreenCanvasEl.getContext("2d");
+    offscreenCanvasEl.width = width;
+    offscreenCanvasEl.height = height;
+  }
   return {
     ctx,
+    offscreenCtx,
+    offscreenCanvasEl,
     width,
     height,
     input: {},
@@ -354,6 +365,11 @@ function initGame(state, env) {
   let hud = env.engine.hud;
   let canvasEl = env.engine.canvasEl;
   let recorder = env.engine.recorder;
+  let mainCtx;
+  if (env.offscreenCtx) {
+    mainCtx = env.ctx;
+    env.ctx = env.offscreenCtx;
+  }
   (function gameLoop(time) {
     env.delta = (time - lastTime) / 1e3;
     readInput(env);
@@ -389,6 +405,9 @@ function initGame(state, env) {
       }
     }
     clearFrameInput(env.engine.input);
+    if (env.offscreenCtx) {
+      mainCtx.drawImage(env.offscreenCanvasEl, 0, 0);
+    }
     lastTime = time;
     window.requestAnimationFrame(gameLoop);
   })(0);

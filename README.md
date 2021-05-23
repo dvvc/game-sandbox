@@ -67,6 +67,25 @@ Once started, the server serves all files under the directory specified in `base
 The `runGame()` function is the entry point of your game. It is called like this:
 
 ```js
+import { runGame } from '/game-sandbox';
+
+runGame(options);
+```
+
+Where `options` has the following attributes:
+- `moduleUrl`: The starting point of the game, relative to the directory passed to `watch-dir`. This
+  file must export two functions, `setup()` and `draw()`.
+- `width`: The game's canvas width (default: 600).
+- `height`: The game's canvas height (default: 600).
+- `canvasId`: The `id` attribute of the canvas element (default: "canvas").
+- `offscreen`: If set to true, the context object passed to `draw()` will be an offscreen.
+  canvas. After each call to `draw`, the `game-sandbox` engine will draw the offscreen canvas into
+  the main one. This is useful if your game does a lot of drawing to the canvas per frame (default:
+  false).
+
+Example:
+
+```js
     import { runGame } from '/game-sandbox';
 
     runGame({
@@ -76,8 +95,6 @@ The `runGame()` function is the entry point of your game. It is called like this
       moduleUrl: './index.js',
     });
 ```
-
-Where `width` and `height` are the game's canvas dimensions, `canvasId` is the `id` attribute of the canvas element in your html, and `moduleUrl` is the starting point of your game, relative to the directory passed to `watch-dir`. The file your specify in `moduleUrl` must export two functions, `setup()` and `draw()`.
 
 When a file under `watch-dir` changes, the server generates a bundle with the game code and notifies the browser. The browser then reloads the `draw()` function between frames so your game is updated seamlessly.
 
