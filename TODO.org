@@ -1,3 +1,4 @@
+
 #+TODO: TODO FIXME IDEA CURRENT | DONE FIXED CANCELLED
 
 * Version 1
@@ -43,6 +44,7 @@
 ** DONE Hot reload of game assets
 ** DONE Replay in slow motion
 ** DONE Play frame by frame
+** TODO Document animations API
 ** TODO Support gamepad input
 ** TODO Manage the canvas parent, so we can have proper HUDs
 ** TODO Introspect state (while playing frame-by-frame)
