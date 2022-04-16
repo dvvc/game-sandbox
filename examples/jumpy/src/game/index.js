@@ -123,6 +123,8 @@ function updateBirds(birds, width, delta) {
     } else if (b.x > width - CLOUD_WIDTH) {
       b.d = -1;
     }
+
+    animations.updateAnimation(b.a, delta);
   });
 }
 
@@ -367,7 +369,6 @@ export function draw(state, { input, ctx, width, height, delta, assets }) {
       BIRD_SPRITE_WIDTH,
       BIRD_SPRITE_HEIGHT,
       assets,
-      delta,
       ctx
     );
   });
@@ -396,6 +397,8 @@ export function draw(state, { input, ctx, width, height, delta, assets }) {
     state.currentAnimation = state.idleAnimation;
   }
 
+  animations.updateAnimation(state.currentAnimation, delta);
+
   ctx.save();
   animations.drawAnimation(
     state.currentAnimation,
@@ -404,7 +407,6 @@ export function draw(state, { input, ctx, width, height, delta, assets }) {
     PLAYER_SPRITE_WIDTH,
     PLAYER_SPRITE_HEIGHT,
     assets,
-    delta,
     ctx,
     flip,
     state.r * delta

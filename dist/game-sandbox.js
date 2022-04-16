@@ -457,22 +457,29 @@ function runGame(opts) {
 var animations_exports = {};
 __export(animations_exports, {
   createAnimation: () => createAnimation,
-  drawAnimation: () => drawAnimation
+  drawAnimation: () => drawAnimation,
+  updateAnimation: () => updateAnimation
 });
-function drawAnimation(animation, x, y, width, height, assets, delta, ctx, flip = false, rotation = 0) {
-  let asset = assets[animation.assetName];
-  if (!asset || !asset.loaded) {
-    throw new Error(`Asset ${animation.assetName} not loaded!!!`);
-  }
+function updateAnimation(animation, delta) {
   animation.time += delta;
   let complete = false;
   if (animation.time > animation.timePerFrame) {
     animation.time = 0;
-    animation.currentFrame++;
-    if (animation.currentFrame >= animation.frames.length) {
+    if (animation.currentFrame < animation.frames.length - 1) {
+      animation.currentFrame++;
+    } else {
       complete = true;
-      animation.currentFrame = 0;
+      if (animation.loop) {
+        animation.currentFrame = 0;
+      }
     }
+  }
+  return complete;
+}
+function drawAnimation(animation, x, y, width, height, assets, ctx, flip = false, rotation = 0) {
+  let asset = assets[animation.assetName];
+  if (!asset || !asset.loaded) {
+    throw new Error(`Asset ${animation.assetName} not loaded!!!`);
   }
   let columns = asset.image.width / animation.width;
   let frameIndex = animation.frames[animation.currentFrame];
@@ -491,7 +498,6 @@ function drawAnimation(animation, x, y, width, height, assets, delta, ctx, flip 
   }
   ctx.drawImage(asset.image, sourceX, sourceY, animation.width, animation.height, 0, 0, width, height);
   ctx.restore();
-  return complete;
 }
 function createAnimation(assetName, {width, height, speed, loop, frames}) {
   return {

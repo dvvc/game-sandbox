@@ -44,7 +44,9 @@
 ** DONE Hot reload of game assets
 ** DONE Replay in slow motion
 ** DONE Play frame by frame
+** DONE Separate animation draw and animation update
 ** TODO Document animations API
+** TODO Add one-time function to execute after reload
 ** TODO Support gamepad input
 ** TODO Manage the canvas parent, so we can have proper HUDs
 ** TODO Introspect state (while playing frame-by-frame)
